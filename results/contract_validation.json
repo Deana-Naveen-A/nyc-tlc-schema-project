@@ -1,0 +1,18 @@
+{
+    "January 2024": {
+        "valid": true,
+        "missing_columns": [],
+        "additional_columns": [],
+        "type_changes": {},
+        "errors": []
+    },
+    "January 2025": {
+        "valid": true,
+        "missing_columns": [],
+        "additional_columns": [
+            "cbd_congestion_fee"
+        ],
+        "type_changes": {},
+        "errors": []
+    }
+}

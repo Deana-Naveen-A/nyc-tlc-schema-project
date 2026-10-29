@@ -1,6 +1,18 @@
+# Python environment
 .venv/
+
+# Python cache
 __pycache__/
 *.py[cod]
+
+# Jupyter temporary files
 .ipynb_checkpoints/
+
+# Pytest cache
 .pytest_cache/
+
+# Environment variables
 .env
+
+# Raw datasets (large Parquet files)
+data/raw/*.parquet

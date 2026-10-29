@@ -1,0 +1,12 @@
+{
+    "contract_status": "VALID",
+    "dataset": "yellow_tripdata_2024-01.parquet",
+    "records_used": 48302,
+    "features": [
+        "trip_distance",
+        "passenger_count"
+    ],
+    "target": "fare_amount",
+    "mae": 2.9068357737754686,
+    "rmse": 7.337327397725141
+}

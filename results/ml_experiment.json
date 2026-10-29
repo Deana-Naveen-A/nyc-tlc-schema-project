@@ -1,0 +1,22 @@
+{
+    "dataset": "NYC TLC Yellow Taxi January 2024",
+    "target": "fare_amount",
+    "features": [
+        "trip_distance",
+        "passenger_count"
+    ],
+    "usable_records": 48302,
+    "test_records": 9661,
+    "experiment": "Simulated missing trip_distance with a zero-value fallback",
+    "baseline": {
+        "mae": 2.9068357737754686,
+        "rmse": 7.337327397725141
+    },
+    "simulated_schema_problem": {
+        "mae": 14.15281806939409,
+        "rmse": 20.16350454480154
+    },
+    "mae_change": 11.24598229561862,
+    "rmse_change": 12.8261771470764,
+    "note": "The corrupted experiment is a controlled simulation, not a claim about the actual impact of the 2025 column."
+}
