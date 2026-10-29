@@ -1,0 +1,10 @@
+services:
+  nyc-tlc-pipeline:
+    build: .
+    container_name: nyc-tlc-schema-pipeline
+
+    volumes:
+      - ./data:/app/data
+      - ./results:/app/results
+
+    command: python src/contract_enforced_pipeline.py
