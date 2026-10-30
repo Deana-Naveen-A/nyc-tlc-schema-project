@@ -1,0 +1,5 @@
+dataset,contract_status,requested_rows,records_used,batch_size,execution_time_seconds,peak_process_memory_mb,mae,rmse,source_file
+yellow_tripdata_2024-01.parquet,VALID,10000,10000,50000,0.538,189.9,3.582488947688511,7.134440997976094,scaling_results_10000.json
+yellow_tripdata_2024-01.parquet,VALID,50000,50000,50000,0.512,196.36,2.749529512299882,6.324626603083769,scaling_results_50000.json
+yellow_tripdata_2024-01.parquet,VALID,100000,100000,50000,0.545,205.58,2.8533690072869486,12.502801456591719,scaling_results_100000.json
+yellow_tripdata_2024-01.parquet,VALID,500000,500000,50000,1.719,261.54,2.4137087335161462,6.1986521191598305,scaling_results_500000.json
