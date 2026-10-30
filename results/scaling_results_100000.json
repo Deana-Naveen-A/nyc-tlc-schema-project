@@ -1,0 +1,16 @@
+{
+    "contract_status": "VALID",
+    "dataset": "yellow_tripdata_2024-01.parquet",
+    "requested_rows": 100000,
+    "records_used": 100000,
+    "batch_size": 50000,
+    "features": [
+        "trip_distance",
+        "passenger_count"
+    ],
+    "target": "fare_amount",
+    "mae": 2.8533690072869486,
+    "rmse": 12.502801456591719,
+    "execution_time_seconds": 0.545,
+    "peak_process_memory_mb": 205.58
+}
