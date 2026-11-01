@@ -8,130 +8,168 @@ import pyarrow.parquet as pq
 from src.contract_enforced_pipeline import validate_contract
 
 
-ROOT = Path(__file__).resolve().parent.parent
-CONTRACT_PATH = ROOT / "contracts" / "tlc_contract_v1.json"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+CONTRACT_PATH = PROJECT_ROOT / "contracts" / "tlc_contract_v1.json"
+DATA_PATH = PROJECT_ROOT / "data" / "raw" / "yellow_tripdata_2024-01.parquet"
+RESULTS_PATH = PROJECT_ROOT / "results" / "failure_detection_results.json"
 
-OUTPUT_DIR = ROOT / "results"
-OUTPUT_DIR.mkdir(exist_ok=True)
 
-
-def create_parquet(path, fields):
-    schema = pa.schema(fields)
-
-    data = {
-        field.name: pa.array([], type=field.type)
-        for field in schema
-    }
-
-    table = pa.table(data, schema=schema)
-    pq.write_table(table, path)
+def create_test_parquet(output_path, schema):
+    """Create an empty Parquet file with the supplied schema."""
+    table = pa.Table.from_batches([], schema=schema)
+    pq.write_table(table, output_path)
 
 
 def main():
+    # Load the real contract.
+    with open(CONTRACT_PATH, "r", encoding="utf-8") as file:
+        contract = json.load(file)
+
+    required_columns = contract["required_columns"]
+
+    # Read the real baseline schema so the test uses the correct data types.
+    baseline_schema = pq.read_schema(DATA_PATH)
+
+    missing_from_baseline = [
+        column
+        for column in required_columns
+        if column not in baseline_schema.names
+    ]
+
+    if missing_from_baseline:
+        raise ValueError(
+            "The baseline dataset is missing contract columns: "
+            f"{missing_from_baseline}"
+        )
+
+    # Build a complete schema containing every required contract column.
+    correct_fields = [
+        baseline_schema.field(column)
+        for column in required_columns
+    ]
+
+    # The three scenarios differ by only one schema change each.
     scenarios = [
         {
             "name": "Missing required column",
-            "fields": [
-                ("trip_distance", pa.float64()),
-                ("passenger_count", pa.int64()),
-            ],
+            "change": "missing",
             "expected_valid": False,
-            "breaking": True,
         },
         {
             "name": "Wrong data type",
-            "fields": [
-                ("trip_distance", pa.string()),
-                ("passenger_count", pa.int64()),
-                ("fare_amount", pa.float64()),
-            ],
+            "change": "wrong_type",
             "expected_valid": False,
-            "breaking": True,
         },
         {
             "name": "Additional compatible column",
-            "fields": [
-                ("trip_distance", pa.float64()),
-                ("passenger_count", pa.int64()),
-                ("fare_amount", pa.float64()),
-                ("new_optional_field", pa.float64()),
-            ],
-            "expected_valid": True,
-            "breaking": False,
+            "change": "additional",
+            "expected_valid": contract.get(
+                "allow_additional_columns", False
+            ),
         },
     ]
 
     results = []
+    breaking_detected = 0
+    breaking_total = 0
 
     with tempfile.TemporaryDirectory() as temp_dir:
-        for index, scenario in enumerate(scenarios):
-            data_path = Path(temp_dir) / f"scenario_{index}.parquet"
+        temp_dir = Path(temp_dir)
 
-            create_parquet(data_path, scenario["fields"])
-
+        for scenario in scenarios:
             print(f"\nTesting: {scenario['name']}")
 
+            fields = list(correct_fields)
+
+            if scenario["change"] == "missing":
+                # Remove exactly one required column.
+                fields = [
+                    field for field in fields
+                    if field.name != next(iter(required_columns))
+                ]
+
+            elif scenario["change"] == "wrong_type":
+                # Change only trip_distance to string, preserving other fields.
+                if "trip_distance" not in required_columns:
+                    raise ValueError(
+                        "'trip_distance' is not in the contract."
+                    )
+
+                fields = [
+                    pa.field(field.name, pa.string())
+                    if field.name == "trip_distance"
+                    else field
+                    for field in fields
+                ]
+
+            elif scenario["change"] == "additional":
+                # Keep every required column and add one extra field.
+                fields.append(
+                    pa.field("experiment_extra_column", pa.string())
+                )
+
+            test_path = temp_dir / (
+                scenario["change"] + ".parquet"
+            )
+            test_schema = pa.schema(fields)
+            create_test_parquet(test_path, test_schema)
+
             actual_valid = validate_contract(
-                data_path,
+                test_path,
                 CONTRACT_PATH,
             )
 
-            detected_correctly = (
-                actual_valid == scenario["expected_valid"]
-            )
+            expected_valid = scenario["expected_valid"]
+            correct = actual_valid == expected_valid
+
+            print("Expected valid:", expected_valid)
+            print("Actual valid:", actual_valid)
+            print("Correct outcome:", correct)
+
+            is_breaking = scenario["change"] in {
+                "missing",
+                "wrong_type",
+            }
+
+            if is_breaking:
+                breaking_total += 1
+                if not actual_valid:
+                    breaking_detected += 1
 
             results.append({
                 "scenario": scenario["name"],
-                "expected_valid": scenario["expected_valid"],
+                "expected_valid": expected_valid,
                 "actual_valid": actual_valid,
-                "breaking_change": scenario["breaking"],
-                "detected_correctly": detected_correctly,
+                "correct_outcome": correct,
+                "is_breaking_change": is_breaking,
             })
 
-            print("Expected valid:", scenario["expected_valid"])
-            print("Actual valid:", actual_valid)
-            print("Correct outcome:", detected_correctly)
-
-    breaking_results = [
-        result for result in results
-        if result["breaking_change"]
-    ]
-
-    detected = sum(
-        result["detected_correctly"]
-        for result in breaking_results
+    detection_rate = (
+        breaking_detected / breaking_total * 100
+        if breaking_total
+        else 0.0
     )
 
-    total = len(breaking_results)
-
     summary = {
-        "total_scenarios": len(results),
-        "breaking_scenarios": total,
-        "breaking_scenarios_detected_correctly": detected,
-        "breaking_change_detection_rate_percent": (
-            round(100 * detected / total, 2)
-            if total else None
-        ),
-        "compatible_scenarios_accepted": sum(
-            result["detected_correctly"]
-            for result in results
-            if not result["breaking_change"]
-        ),
         "results": results,
+        "breaking_scenarios_detected": breaking_detected,
+        "breaking_scenarios_total": breaking_total,
+        "breaking_change_detection_rate_percent": detection_rate,
+        "all_scenarios_correct": all(
+            result["correct_outcome"] for result in results
+        ),
     }
 
-    output_path = OUTPUT_DIR / "failure_detection_results.json"
+    RESULTS_PATH.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(output_path, "w", encoding="utf-8") as file:
+    with open(RESULTS_PATH, "w", encoding="utf-8") as file:
         json.dump(summary, file, indent=4)
 
     print("\n=== Failure Detection Summary ===")
-    print(f"Breaking scenarios detected: {detected}/{total}")
-    print(
-        "Breaking-change detection rate:",
-        f"{summary['breaking_change_detection_rate_percent']}%",
-    )
-    print("Results saved to:", output_path)
+    print(f"Breaking scenarios detected: {breaking_detected}/{breaking_total}")
+    print(f"Breaking-change detection rate: {detection_rate:.1f}%")
+    print("All scenarios correct:", summary["all_scenarios_correct"])
+    print("Results saved to:", RESULTS_PATH)
 
 
 if __name__ == "__main__":

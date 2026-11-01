@@ -1,30 +1,29 @@
 {
-    "total_scenarios": 3,
-    "breaking_scenarios": 2,
-    "breaking_scenarios_detected_correctly": 2,
-    "breaking_change_detection_rate_percent": 100.0,
-    "compatible_scenarios_accepted": 0,
     "results": [
         {
             "scenario": "Missing required column",
             "expected_valid": false,
             "actual_valid": false,
-            "breaking_change": true,
-            "detected_correctly": true
+            "correct_outcome": true,
+            "is_breaking_change": true
         },
         {
             "scenario": "Wrong data type",
             "expected_valid": false,
             "actual_valid": false,
-            "breaking_change": true,
-            "detected_correctly": true
+            "correct_outcome": true,
+            "is_breaking_change": true
         },
         {
             "scenario": "Additional compatible column",
             "expected_valid": true,
-            "actual_valid": false,
-            "breaking_change": false,
-            "detected_correctly": false
+            "actual_valid": true,
+            "correct_outcome": true,
+            "is_breaking_change": false
         }
-    ]
+    ],
+    "breaking_scenarios_detected": 2,
+    "breaking_scenarios_total": 2,
+    "breaking_change_detection_rate_percent": 100.0,
+    "all_scenarios_correct": true
 }
