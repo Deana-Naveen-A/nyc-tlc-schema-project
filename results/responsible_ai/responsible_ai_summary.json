@@ -1,0 +1,38 @@
+{
+    "experiment": "Trip-distance-group error analysis",
+    "dataset": "NYC TLC Yellow Taxi, January 2024",
+    "original_records": 2964624,
+    "usable_records": 2754411,
+    "training_records": 2203528,
+    "test_records": 550883,
+    "features": [
+        "trip_distance",
+        "passenger_count"
+    ],
+    "target": "fare_amount",
+    "random_state": 42,
+    "overall_MAE": 2.4236,
+    "overall_RMSE": 5.853,
+    "group_results": [
+        {
+            "distance_category": "Short (0-2 miles)",
+            "records": 322701,
+            "MAE": 1.7588,
+            "RMSE": 4.2317
+        },
+        {
+            "distance_category": "Medium (2-5 miles)",
+            "records": 141536,
+            "MAE": 2.4715,
+            "RMSE": 4.019
+        },
+        {
+            "distance_category": "Long (>5 miles)",
+            "records": 86646,
+            "MAE": 4.8213,
+            "RMSE": 11.1679
+        }
+    ],
+    "execution_time_seconds": 13.384,
+    "interpretation_note": "Differences in prediction error across distance categories indicate performance variation. They do not independently establish demographic unfairness."
+}

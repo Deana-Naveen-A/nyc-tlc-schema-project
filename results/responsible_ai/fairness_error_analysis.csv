@@ -1,0 +1,4 @@
+distance_category,records,MAE,RMSE
+Short (0-2 miles),322701,1.7588,4.2317
+Medium (2-5 miles),141536,2.4715,4.019
+Long (>5 miles),86646,4.8213,11.1679
