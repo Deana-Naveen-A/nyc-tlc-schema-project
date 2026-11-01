@@ -92,3 +92,39 @@ def test_additional_column_is_allowed(tmp_path):
     )
 
     assert validate_contract(parquet_path, contract_path) is True
+
+
+def test_renamed_required_column_is_rejected(tmp_path):
+    schema = pa.schema([
+        ("trip_distance_new", pa.float64()),
+        ("fare_amount", pa.float64()),
+    ])
+
+    parquet_path = create_test_parquet(tmp_path, schema)
+
+    contract_path = create_test_contract(
+        tmp_path,
+        {
+            "trip_distance": "double",
+            "fare_amount": "double",
+        },
+    )
+
+    assert validate_contract(parquet_path, contract_path) is False
+
+
+def test_additional_column_is_rejected_when_disallowed(tmp_path):
+    schema = pa.schema([
+        ("trip_distance", pa.float64()),
+        ("unexpected_column", pa.float64()),
+    ])
+
+    parquet_path = create_test_parquet(tmp_path, schema)
+
+    contract_path = create_test_contract(
+        tmp_path,
+        {"trip_distance": "double"},
+        allow_additional=False,
+    )
+
+    assert validate_contract(parquet_path, contract_path) is False

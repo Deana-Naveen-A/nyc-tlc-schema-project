@@ -11,6 +11,6 @@
     "target": "fare_amount",
     "mae": 2.4137087335161462,
     "rmse": 6.1986521191598305,
-    "execution_time_seconds": 1.719,
-    "peak_process_memory_mb": 261.54
+    "execution_time_seconds": 1.626,
+    "peak_process_memory_mb": 253.43
 }

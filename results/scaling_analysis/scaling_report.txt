@@ -10,12 +10,12 @@ Largest experiment: 500,000 rows
 
 Fastest recorded experiment:
   Rows: 50,000
-  Execution time: 0.512 seconds
+  Execution time: 0.507 seconds
 
 Largest recorded experiment:
   Rows processed: 500,000
-  Execution time: 1.719 seconds
-  Peak sampled memory: 261.54 MB
+  Execution time: 1.626 seconds
+  Peak sampled memory: 253.43 MB
   MAE: 2.4137
   RMSE: 6.1987
 
